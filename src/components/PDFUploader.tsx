@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Typography, Box, CircularProgress, Snackbar, Alert } from '@mui/material';
+import { Box, IconButton, Tooltip, CircularProgress, Snackbar, Alert, Typography } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { usePDF } from '../contexts/PDFContext';
