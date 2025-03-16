@@ -1,46 +1,80 @@
-# Getting Started with Create React App
+# PDF Viewer Application
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A modern React application for viewing, storing, and managing PDF files. This application allows users to upload PDFs, view them in a browser, and download them. All PDFs are stored locally, so they persist between sessions.
 
-## Available Scripts
+## Features
 
-In the project directory, you can run:
+- **Upload PDFs**: Drag and drop or click to upload PDF files
+- **View PDFs**: View PDF files directly in the browser
+- **Download PDFs**: Download your stored PDF files
+- **Persistent Storage**: All PDFs are stored locally, so they persist between sessions
+- **Responsive Design**: Works on desktop and mobile devices
+- **Modern UI**: Dark mode with neon accents theme for a sleek, modern look
 
-### `npm start`
+## Tech Stack
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+- **React**: Frontend library for building user interfaces
+- **TypeScript**: For type safety and better developer experience
+- **Material UI**: Component library for modern UI elements
+- **PDF.js**: For rendering PDFs in the browser
+- **Dexie**: IndexedDB wrapper for client-side storage
+- **Styled Components**: For component-based styling
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+## Getting Started
 
-### `npm test`
+### Prerequisites
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- Node.js (v14.0.0 or later)
+- npm (v6.0.0 or later)
 
-### `npm run build`
+### Installation
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+1. Clone the repository:
+   ```bash
+   git clone <repository-url>
+   cd pdf-viewer
+   ```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+3. Start the development server:
+   ```bash
+   npm start
+   ```
 
-### `npm run eject`
+4. Open [http://localhost:3000](http://localhost:3000) in your browser to see the application.
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+## Building for Production
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+To build the application for production, run:
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+```bash
+npm run build
+```
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+This will create an optimized production build in the `build` folder.
 
-## Learn More
+## Project Structure
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+```
+pdf_viewer/
+├── public/                # Public assets
+├── src/
+│   ├── components/        # React components
+│   ├── contexts/          # React context providers
+│   ├── hooks/             # Custom React hooks
+│   ├── services/          # Service functions
+│   ├── styles/            # Global styles and themes
+│   ├── types/             # TypeScript type definitions
+│   ├── utils/             # Utility functions
+│   ├── App.tsx            # Main application component
+│   └── index.tsx          # Application entry point
+└── package.json           # Project dependencies and scripts
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## License
+
+This project is licensed under the MIT License.
