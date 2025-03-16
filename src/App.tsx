@@ -1,13 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ThemeProvider } from '@mui/material/styles';
-import { CssBaseline, Container, Box, Typography, Button, Snackbar, Alert, Tabs, Tab } from '@mui/material';
-import { styled } from '@mui/material/styles';
-import theme from './styles/theme';
+import { CssBaseline, Container, Box, Typography, Button, Snackbar, Alert, Tabs, Tab, IconButton, Paper } from '@mui/material';
+import { styled, alpha, useTheme as useMuiTheme } from '@mui/material/styles';
+import Brightness4Icon from '@mui/icons-material/Brightness4';
+import Brightness7Icon from '@mui/icons-material/Brightness7';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import DeleteIcon from '@mui/icons-material/Delete';
 import GlobalStyles from './styles/globalStyles';
 import Header from './components/Header';
 import PDFViewer from './components/PDFViewer';
 import PDFLibrary from './components/PDFLibrary';
 import pdfDatabaseService from './services/pdfDatabase';
+import { ThemeProvider, useTheme } from './contexts/ThemeContext';
+import BackgroundAnimation from './components/BackgroundAnimation';
 
 const MainContainer = styled(Container)(({ theme }) => ({
   padding: theme.spacing(4),
@@ -16,12 +20,26 @@ const MainContainer = styled(Container)(({ theme }) => ({
 
 const Section = styled(Box)(({ theme }) => ({
   marginBottom: theme.spacing(4),
+  position: 'relative',
 }));
 
 const SectionTitle = styled(Typography)(({ theme }) => ({
   marginBottom: theme.spacing(2),
-  color: theme.palette.primary.main,
+  color: theme.palette.mode === 'dark' ? theme.palette.primary.main : theme.palette.primary.dark,
   fontWeight: 600,
+  position: 'relative',
+  display: 'inline-block',
+  '&::after': {
+    content: '""',
+    position: 'absolute',
+    bottom: -5,
+    left: 0,
+    width: '100%',
+    height: 2,
+    background: theme.palette.mode === 'dark'
+      ? 'linear-gradient(90deg, #00BFFF, transparent)'
+      : 'linear-gradient(90deg, #0D47A1, transparent)',
+  },
 }));
 
 const UploadBox = styled(Box)(({ theme }) => ({
@@ -29,15 +47,52 @@ const UploadBox = styled(Box)(({ theme }) => ({
   flexDirection: 'column',
   alignItems: 'center',
   justifyContent: 'center',
-  padding: theme.spacing(4),
-  borderRadius: theme.shape.borderRadius * 1.5,
+  padding: theme.spacing(5),
+  borderRadius: theme.shape.borderRadius * 2,
   border: `2px dashed ${theme.palette.primary.main}`,
-  backgroundColor: 'rgba(0, 191, 255, 0.05)',
+  backgroundColor: theme.palette.mode === 'dark' 
+    ? 'rgba(36, 36, 62, 0.7)' 
+    : 'rgba(255, 255, 255, 0.7)',
+  backdropFilter: 'blur(10px)',
+  boxShadow: theme.palette.mode === 'dark' 
+    ? '0 4px 20px rgba(0, 0, 0, 0.3)' 
+    : '0 4px 20px rgba(0, 0, 0, 0.1)',
   cursor: 'pointer',
-  transition: 'all 0.3s ease-in-out',
+  transition: 'all 0.3s ease-in-out, box-shadow 0.5s ease-in-out',
+  position: 'relative',
+  overflow: 'hidden',
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: `radial-gradient(circle at center, ${theme.palette.primary.main}10, transparent 70%)`,
+    opacity: 0,
+    transition: 'opacity 0.5s ease',
+    zIndex: 0,
+  },
   '&:hover': {
-    backgroundColor: 'rgba(0, 191, 255, 0.1)',
-    transform: 'scale(1.02)',
+    borderColor: theme.palette.primary.light,
+    boxShadow: `0 0 30px ${theme.palette.primary.main}60`,
+    transform: 'translateY(-5px)',
+    '&::before': {
+      opacity: 0.2,
+    },
+  },
+}));
+
+const UploadIcon = styled(CloudUploadIcon)(({ theme }) => ({
+  fontSize: 60,
+  color: theme.palette.primary.main,
+  marginBottom: theme.spacing(2),
+  filter: theme.palette.mode === 'dark'
+    ? 'drop-shadow(0 0 8px rgba(0, 191, 255, 0.5))'
+    : 'drop-shadow(0 0 8px rgba(13, 71, 161, 0.5))',
+  transition: 'all 0.3s ease',
+  '&:hover': {
+    transform: 'translateY(-5px)',
   },
 }));
 
@@ -75,7 +130,35 @@ const TabPanel = (props: TabPanelProps) => {
   );
 };
 
-const App: React.FC = () => {
+// Theme toggle button component
+const ThemeToggle = () => {
+  const { mode, toggleTheme } = useTheme();
+  
+  return (
+    <IconButton 
+      onClick={toggleTheme} 
+      color="inherit"
+      sx={{
+        position: 'fixed',
+        bottom: 20,
+        right: 20,
+        backgroundColor: 'primary.main',
+        color: 'white',
+        boxShadow: 3,
+        zIndex: 1000,
+        '&:hover': {
+          backgroundColor: 'primary.dark',
+        }
+      }}
+    >
+      {mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
+    </IconButton>
+  );
+};
+
+const AppContent: React.FC = () => {
+  const { mode } = useTheme();
+  const theme = useMuiTheme();
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [showViewer, setShowViewer] = useState<boolean>(false);
   const [isDragging, setIsDragging] = useState<boolean>(false);
@@ -170,9 +253,10 @@ const App: React.FC = () => {
   };
 
   return (
-    <ThemeProvider theme={theme}>
+    <>
       <CssBaseline />
       <GlobalStyles />
+      <BackgroundAnimation />
       <Header />
       <MainContainer maxWidth="lg">
         <Tabs 
@@ -196,15 +280,24 @@ const App: React.FC = () => {
               onDragLeave={handleDragLeave}
               onDragOver={handleDragOver}
               onDrop={handleDrop}
-              sx={{
-                transform: isDragging ? 'scale(1.02)' : 'scale(1)',
-                boxShadow: isDragging ? '0 0 10px rgba(0, 191, 255, 0.5)' : 'none',
-              }}
+              className={isDragging ? 'dragging' : ''}
             >
-              <Typography variant="h6" component="div" gutterBottom>
+              <CloudUploadIcon 
+                sx={{ 
+                  fontSize: 60, 
+                  color: 'primary.main',
+                  mb: 2,
+                  filter: theme => theme.palette.mode === 'dark' 
+                    ? 'drop-shadow(0 0 8px rgba(0, 191, 255, 0.5))'
+                    : 'drop-shadow(0 0 8px rgba(13, 71, 161, 0.5))',
+                  position: 'relative',
+                  zIndex: 1
+                }} 
+              />
+              <Typography variant="h6" component="div" gutterBottom sx={{ position: 'relative', zIndex: 1 }}>
                 Drag & Drop your PDF file here
               </Typography>
-              <Typography variant="body2" color="textSecondary">
+              <Typography variant="body2" color="textSecondary" sx={{ position: 'relative', zIndex: 1 }}>
                 or click to browse files
               </Typography>
               <VisuallyHiddenInput
@@ -217,12 +310,13 @@ const App: React.FC = () => {
           </Section>
 
           {pdfFile && (
-            <Section>
+            <Section className="slide-up">
               <SectionTitle variant="h5">Selected PDF: {pdfFile.name}</SectionTitle>
               <Button 
                 variant="contained" 
                 color="primary" 
                 onClick={() => setShowViewer(true)}
+                sx={{ mt: 2 }}
               >
                 View PDF
               </Button>
@@ -253,6 +347,16 @@ const App: React.FC = () => {
           {notification.message}
         </Alert>
       </Snackbar>
+      
+      <ThemeToggle />
+    </>
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <ThemeProvider>
+      <AppContent />
     </ThemeProvider>
   );
 };

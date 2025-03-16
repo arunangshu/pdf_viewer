@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Box, CircularProgress, Typography, IconButton, Tooltip } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
+import { useTheme } from '../contexts/ThemeContext';
 
 const ViewerContainer = styled(Box)(({ theme }) => ({
   position: 'fixed',
@@ -9,12 +10,16 @@ const ViewerContainer = styled(Box)(({ theme }) => ({
   left: 0,
   right: 0,
   bottom: 0,
-  backgroundColor: 'rgba(0, 0, 0, 0.9)',
+  backgroundColor: theme.palette.mode === 'dark' 
+    ? 'rgba(0, 0, 0, 0.9)'
+    : 'rgba(0, 0, 0, 0.21)',
+  backdropFilter: 'blur(5px)',
   zIndex: 1300,
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
   justifyContent: 'center',
+  transition: 'all 0.3s ease',
 }));
 
 const PDFContainer = styled(Box)(({ theme }) => ({
@@ -25,17 +30,31 @@ const PDFContainer = styled(Box)(({ theme }) => ({
   height: '90%',
   width: '90%',
   position: 'relative',
+  borderRadius: theme.shape.borderRadius * 2,
+  boxShadow: theme.palette.mode === 'dark'
+    ? '0 0 30px rgba(0, 0, 0, 0.5)'
+    : '0 0 30px rgba(255, 255, 255, 0.3)',
+  overflow: 'hidden',
 }));
 
 const CloseButton = styled(IconButton)(({ theme }) => ({
   position: 'absolute',
   top: 20,
   right: 20,
-  color: theme.palette.primary.main,
-  backgroundColor: 'rgba(26, 26, 46, 0.7)',
+  color: 'white',
+  backgroundColor: theme.palette.mode === 'dark'
+    ? 'rgba(26, 26, 46, 0.7)'
+    : 'rgba(26, 118, 255, 0.7)',
+  borderRadius: '50%',
+  padding: theme.spacing(1),
+  boxShadow: '0 2px 10px rgba(0, 0, 0, 0.3)',
   '&:hover': {
-    backgroundColor: 'rgba(26, 26, 46, 0.9)',
+    backgroundColor: theme.palette.mode === 'dark'
+      ? 'rgba(26, 26, 46, 0.9)'
+      : 'rgba(13, 71, 161, 0.9)',
+    transform: 'scale(1.05)',
   },
+  transition: 'all 0.2s ease',
 }));
 
 const StyledIframe = styled('iframe')(({ theme }) => ({
@@ -43,7 +62,10 @@ const StyledIframe = styled('iframe')(({ theme }) => ({
   height: '100%',
   border: 'none',
   borderRadius: theme.shape.borderRadius,
-  backgroundColor: '#24243e',
+  backgroundColor: theme.palette.mode === 'dark' 
+    ? '#24243e' 
+    : '#f5f5f5',
+  transition: 'background-color 0.3s ease',
 }));
 
 interface PDFViewerProps {
@@ -54,6 +76,7 @@ interface PDFViewerProps {
 const PDFViewer: React.FC<PDFViewerProps> = ({ file, onClose }) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [fileUrl, setFileUrl] = useState<string | null>(null);
+  const { mode } = useTheme();
 
   useEffect(() => {
     if (file) {
@@ -82,9 +105,18 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ file, onClose }) => {
 
       <PDFContainer>
         {loading ? (
-          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center', 
+            gap: 2,
+            padding: 4,
+            backgroundColor: mode === 'dark' ? 'rgba(36, 36, 62, 0.8)' : 'rgba(255, 255, 255, 0.8)',
+            borderRadius: 2,
+            backdropFilter: 'blur(10px)'
+          }}>
             <CircularProgress color="primary" />
-            <Typography color="primary">Loading PDF...</Typography>
+            <Typography variant="body1" color="primary">Loading PDF...</Typography>
           </Box>
         ) : (
           <StyledIframe 

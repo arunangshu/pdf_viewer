@@ -14,9 +14,10 @@ import {
   DialogContent,
   DialogActions,
   CircularProgress,
-  CardMedia
+  CardMedia,
+  Paper
 } from '@mui/material';
-import { styled } from '@mui/material/styles';
+import { styled, alpha } from '@mui/material/styles';
 import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import SearchIcon from '@mui/icons-material/Search';
@@ -32,31 +33,65 @@ const SearchContainer = styled(Box)(({ theme }) => ({
   alignItems: 'center',
   marginBottom: theme.spacing(3),
   width: '100%',
+  backgroundColor: alpha(theme.palette.background.paper, 0.6),
+  borderRadius: theme.shape.borderRadius * 2,
+  backdropFilter: 'blur(20px)',
+  padding: theme.spacing(1, 2),
+  boxShadow: theme.palette.mode === 'dark'
+    ? '0 4px 20px rgba(0, 0, 0, 0.3)'
+    : '0 4px 20px rgba(0, 0, 0, 0.1)',
 }));
 
 const PDFCard = styled(Card)(({ theme }) => ({
   height: '100%',
   display: 'flex',
   flexDirection: 'column',
-  backgroundColor: theme.palette.background.paper,
-  transition: 'transform 0.2s ease-in-out',
+  transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out',
+  backgroundColor: alpha(
+    theme.palette.background.paper, 
+    theme.palette.mode === 'dark' ? 0.7 : 0.8
+  ),
+  backdropFilter: 'blur(20px)',
+  borderRadius: theme.shape.borderRadius * 2,
+  borderTop: theme.palette.mode === 'dark'
+    ? '1px solid rgba(255, 255, 255, 0.1)'
+    : '1px solid rgba(0, 0, 0, 0.1)',
+  borderLeft: theme.palette.mode === 'dark'
+    ? '1px solid rgba(255, 255, 255, 0.1)'
+    : '1px solid rgba(255, 255, 255, 0.5)',
+  boxShadow: theme.palette.mode === 'dark'
+    ? '0 5px 20px rgba(255, 255, 255, 0.3)'
+    : '0 5px 20px rgba(0, 0, 0, 0.3)',
+  overflow: 'hidden',
   '&:hover': {
-    transform: 'scale(1.02)',
-    boxShadow: theme.shadows[6],
+    transform: 'translateY(-8px) scale(1.02)',
+    boxShadow: theme.palette.mode === 'dark'
+      ? '0 12px 30px rgba(0, 191, 255, 0.2)'
+      : '0 12px 30px rgba(0, 103, 199, 0.57)',
   },
 }));
 
 const PDFCardContent = styled(CardContent)(({ theme }) => ({
   flexGrow: 1,
+  padding: theme.spacing(2),
 }));
 
-const NoResultsContainer = styled(Box)(({ theme }) => ({
+const NoResultsContainer = styled(Paper)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
   justifyContent: 'center',
   padding: theme.spacing(4),
   width: '100%',
+  backgroundColor: alpha(theme.palette.background.paper, 0.7),
+  backdropFilter: 'blur(10px)',
+  borderRadius: theme.shape.borderRadius * 2,
+  borderTop: theme.palette.mode === 'dark'
+    ? '1px solid rgba(255, 255, 255, 0.1)'
+    : '1px solid rgba(255, 255, 255, 0.5)',
+  borderLeft: theme.palette.mode === 'dark'
+    ? '1px solid rgba(255, 255, 255, 0.1)'
+    : '1px solid rgba(255, 255, 255, 0.5)',
 }));
 
 const PDFThumbnail = styled(CardMedia)(({ theme }) => ({
@@ -64,8 +99,63 @@ const PDFThumbnail = styled(CardMedia)(({ theme }) => ({
   backgroundSize: 'contain',
   backgroundPosition: 'center',
   backgroundRepeat: 'no-repeat',
-  backgroundColor: theme.palette.background.default,
+  backgroundColor: alpha(
+    theme.palette.mode === 'dark' ? '#1A1A2E' : '#F5F5F5', 
+    0.5
+  ),
   borderBottom: `1px solid ${theme.palette.divider}`,
+  transition: 'transform 0.3s ease',
+  '&:hover': {
+    transform: 'scale(1.05)',
+  },
+}));
+
+const LoadingContainer = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  padding: theme.spacing(4),
+  borderRadius: theme.shape.borderRadius * 2,
+  backgroundColor: alpha(theme.palette.background.paper, 0.7),
+  backdropFilter: 'blur(10px)',
+  boxShadow: theme.palette.mode === 'dark'
+    ? '0 4px 20px rgba(0, 0, 0, 0.3)'
+    : '0 4px 20px rgba(0, 0, 0, 0.1)',
+}));
+
+const StyledDialog = styled(Dialog)(({ theme }) => ({
+  '& .MuiDialog-paper': {
+    backgroundColor: alpha(
+      theme.palette.background.paper, 
+      theme.palette.mode === 'dark' ? 0.8 : 0.9
+    ),
+    backdropFilter: 'blur(10px)',
+    borderRadius: theme.shape.borderRadius * 2,
+    borderTop: theme.palette.mode === 'dark'
+      ? '1px solid rgba(255, 255, 255, 0.1)'
+      : '1px solid rgba(255, 255, 255, 0.5)',
+    borderLeft: theme.palette.mode === 'dark'
+      ? '1px solid rgba(255, 255, 255, 0.1)'
+      : '1px solid rgba(255, 255, 255, 0.5)',
+    boxShadow: theme.palette.mode === 'dark'
+      ? '0 4px 30px rgba(0, 0, 0, 0.5)'
+      : '0 4px 30px rgba(0, 0, 0, 0.2)',
+  },
+}));
+
+// Update PDFCard text colors to ensure proper contrast
+const CardTitle = styled(Typography)(({ theme }) => ({
+  fontSize: '1rem',
+  fontWeight: 500,
+  color: theme.palette.text.primary,
+  whiteSpace: 'nowrap',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+}));
+
+const CardDescription = styled(Typography)(({ theme }) => ({
+  color: theme.palette.text.secondary,
+  fontSize: '0.875rem',
 }));
 
 interface PDFLibraryProps {
@@ -166,14 +256,15 @@ const PDFLibrary: React.FC<PDFLibraryProps> = ({ onSelectPDF }) => {
                 <SearchIcon />
               </IconButton>
             ),
+            sx: { backgroundColor: 'transparent', backdropFilter: 'none' }
           }}
         />
       </SearchContainer>
 
       {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-          <CircularProgress />
-        </Box>
+        <LoadingContainer>
+          <CircularProgress color="primary" />
+        </LoadingContainer>
       ) : pdfs.length === 0 ? (
         <NoResultsContainer>
           <Typography variant="h6" color="textSecondary" gutterBottom>
@@ -184,30 +275,35 @@ const PDFLibrary: React.FC<PDFLibraryProps> = ({ onSelectPDF }) => {
           </Typography>
         </NoResultsContainer>
       ) : (
-        <Grid container spacing={3}>
-          {pdfs.map((pdf) => (
-            <Grid item xs={12} sm={6} md={4} lg={3} key={pdf.id}>
+        <Grid container spacing={3} className="slide-up">
+          {pdfs.map((pdf, index) => (
+            <Grid item xs={12} sm={6} md={4} lg={3} key={pdf.id} 
+              sx={{ 
+                animation: `fadeIn 0.3s ease forwards ${index * 0.1}s`,
+                opacity: 0
+              }}
+            >
               <PDFCard>
-                <PDFThumbnail
+                {/* <PDFThumbnail
                   image={pdf.thumbnail || ''}
                   title={pdf.name}
                   onClick={() => handleSelectPDF(pdf)}
                   sx={{ cursor: 'pointer' }}
-                />
+                /> */}
                 <PDFCardContent>
-                  <Typography variant="h6" noWrap title={pdf.name}>
+                  <CardTitle variant="h6" title={pdf.name}>
                     {pdf.name}
-                  </Typography>
-                  <Typography variant="body2" color="textSecondary">
+                  </CardTitle>
+                  <CardDescription variant="body2">
                     Size: {formatFileSize(pdf.size)}
-                  </Typography>
-                  <Typography variant="body2" color="textSecondary">
+                  </CardDescription>
+                  <CardDescription variant="body2">
                     Added: {formatDate(pdf.created)}
-                  </Typography>
+                  </CardDescription>
                   {pdf.lastAccessed && (
-                    <Typography variant="body2" color="textSecondary">
+                    <CardDescription variant="body2">
                       Last viewed: {formatDate(pdf.lastAccessed)}
-                    </Typography>
+                    </CardDescription>
                   )}
                 </PDFCardContent>
                 <CardActions>
@@ -219,10 +315,17 @@ const PDFLibrary: React.FC<PDFLibraryProps> = ({ onSelectPDF }) => {
                     View
                   </Button>
                   <IconButton
-                    color="error"
                     onClick={() => {
                       setPdfToDelete(pdf);
                       setDeleteDialogOpen(true);
+                    }}
+                    sx={{ 
+                      color: 'error.main', 
+                      '&:hover': {
+                        color: 'error.dark',
+                        transform: 'scale(1.1)',
+                      },
+                      transition: 'all 0.3s ease'
                     }}
                   >
                     <DeleteIcon />
@@ -235,7 +338,7 @@ const PDFLibrary: React.FC<PDFLibraryProps> = ({ onSelectPDF }) => {
       )}
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+      <StyledDialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
         <DialogTitle>Delete PDF</DialogTitle>
         <DialogContent>
           <Typography>
@@ -248,7 +351,7 @@ const PDFLibrary: React.FC<PDFLibraryProps> = ({ onSelectPDF }) => {
             Delete
           </Button>
         </DialogActions>
-      </Dialog>
+      </StyledDialog>
     </LibraryContainer>
   );
 };
