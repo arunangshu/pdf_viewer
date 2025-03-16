@@ -1,11 +1,13 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { ThemeProvider } from '@mui/material/styles';
-import { CssBaseline, Container, Box, Typography, Button, Snackbar, Alert } from '@mui/material';
+import { CssBaseline, Container, Box, Typography, Button, Snackbar, Alert, Tabs, Tab } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import theme from './styles/theme';
 import GlobalStyles from './styles/globalStyles';
 import Header from './components/Header';
 import PDFViewer from './components/PDFViewer';
+import PDFLibrary from './components/PDFLibrary';
+import pdfDatabaseService from './services/pdfDatabase';
 
 const MainContainer = styled(Container)(({ theme }) => ({
   padding: theme.spacing(4),
@@ -51,6 +53,28 @@ const VisuallyHiddenInput = styled('input')({
   width: 1,
 });
 
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+}
+
+const TabPanel = (props: TabPanelProps) => {
+  const { children, value, index, ...other } = props;
+
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`pdf-tabpanel-${index}`}
+      aria-labelledby={`pdf-tab-${index}`}
+      {...other}
+    >
+      {value === index && <Box sx={{ pt: 3 }}>{children}</Box>}
+    </div>
+  );
+};
+
 const App: React.FC = () => {
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [showViewer, setShowViewer] = useState<boolean>(false);
@@ -60,7 +84,12 @@ const App: React.FC = () => {
     message: '',
     type: 'success',
   });
+  const [tabValue, setTabValue] = useState<number>(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setTabValue(newValue);
+  };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
@@ -69,15 +98,27 @@ const App: React.FC = () => {
     }
   };
 
-  const handleFile = (file: File) => {
+  const handleFile = async (file: File) => {
     if (file.type === 'application/pdf') {
       setPdfFile(file);
       setShowViewer(true);
-      setNotification({
-        open: true,
-        message: 'PDF uploaded successfully',
-        type: 'success',
-      });
+      
+      // Save to database
+      try {
+        await pdfDatabaseService.addPDF(file);
+        setNotification({
+          open: true,
+          message: 'PDF uploaded and saved to library',
+          type: 'success',
+        });
+      } catch (error) {
+        console.error('Error saving PDF to database:', error);
+        setNotification({
+          open: true,
+          message: 'PDF uploaded but could not be saved to library',
+          type: 'error',
+        });
+      }
     } else {
       setNotification({
         open: true,
@@ -123,52 +164,75 @@ const App: React.FC = () => {
     setNotification({ ...notification, open: false });
   };
 
+  const handleSelectFromLibrary = (file: File) => {
+    setPdfFile(file);
+    setShowViewer(true);
+  };
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <GlobalStyles />
       <Header />
       <MainContainer maxWidth="lg">
-        <Section>
-          <SectionTitle variant="h5">Upload PDF</SectionTitle>
-          <UploadBox
-            onClick={() => fileInputRef.current?.click()}
-            onDragEnter={handleDragEnter}
-            onDragLeave={handleDragLeave}
-            onDragOver={handleDragOver}
-            onDrop={handleDrop}
-            sx={{
-              transform: isDragging ? 'scale(1.02)' : 'scale(1)',
-              boxShadow: isDragging ? '0 0 10px rgba(0, 191, 255, 0.5)' : 'none',
-            }}
-          >
-            <Typography variant="h6" component="div" gutterBottom>
-              Drag & Drop your PDF file here
-            </Typography>
-            <Typography variant="body2" color="textSecondary">
-              or click to browse files
-            </Typography>
-            <VisuallyHiddenInput
-              ref={fileInputRef}
-              type="file"
-              accept=".pdf,application/pdf"
-              onChange={handleFileChange}
-            />
-          </UploadBox>
-        </Section>
+        <Tabs 
+          value={tabValue} 
+          onChange={handleTabChange} 
+          variant="fullWidth" 
+          indicatorColor="primary"
+          textColor="primary"
+          sx={{ mb: 3 }}
+        >
+          <Tab label="Upload PDF" />
+          <Tab label="PDF Library" />
+        </Tabs>
 
-        {pdfFile && (
+        <TabPanel value={tabValue} index={0}>
           <Section>
-            <SectionTitle variant="h5">Selected PDF: {pdfFile.name}</SectionTitle>
-            <Button 
-              variant="contained" 
-              color="primary" 
-              onClick={() => setShowViewer(true)}
+            <SectionTitle variant="h5">Upload PDF</SectionTitle>
+            <UploadBox
+              onClick={() => fileInputRef.current?.click()}
+              onDragEnter={handleDragEnter}
+              onDragLeave={handleDragLeave}
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+              sx={{
+                transform: isDragging ? 'scale(1.02)' : 'scale(1)',
+                boxShadow: isDragging ? '0 0 10px rgba(0, 191, 255, 0.5)' : 'none',
+              }}
             >
-              View PDF
-            </Button>
+              <Typography variant="h6" component="div" gutterBottom>
+                Drag & Drop your PDF file here
+              </Typography>
+              <Typography variant="body2" color="textSecondary">
+                or click to browse files
+              </Typography>
+              <VisuallyHiddenInput
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,application/pdf"
+                onChange={handleFileChange}
+              />
+            </UploadBox>
           </Section>
-        )}
+
+          {pdfFile && (
+            <Section>
+              <SectionTitle variant="h5">Selected PDF: {pdfFile.name}</SectionTitle>
+              <Button 
+                variant="contained" 
+                color="primary" 
+                onClick={() => setShowViewer(true)}
+              >
+                View PDF
+              </Button>
+            </Section>
+          )}
+        </TabPanel>
+
+        <TabPanel value={tabValue} index={1}>
+          <PDFLibrary onSelectPDF={handleSelectFromLibrary} />
+        </TabPanel>
       </MainContainer>
 
       {showViewer && pdfFile && (
